@@ -6,6 +6,11 @@ from rest_framework.serializers import Serializer
 from .models import Student
 from .serializers import *
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+
+import csv,io
+
 @api_view(['GET', 'POST'])
 def students_list(request):
     if request.method == 'GET':
@@ -42,5 +47,39 @@ def students_detail(request, pk):
     elif request.method == 'DELETE':
         student.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+def import_data(excel_file):
+    # try:
+    data_set = excel_file.read().decode('UTF-8')
+    io_string = io.StringIO(data_set)
+    next(io_string)
+    key = 0
+    excel_data = list()
+    for row_data in csv.reader(io_string, delimiter=';', quotechar="|"):
+        
+        key = key+1
+        if(key == 1 or key == 2):
+            continue
+        
+        validstatus = False
+        for val in row_data:
+            
+            if(val is not "" and val is not ";"):
+                validstatus = True
+        if  not validstatus:
+            break
+        try:
+            print("======================")
+            print(row_data)
+            excel_data.append(row_data)
+        except Exception as e:
+            print(e)
+            continue
+
+    return excel_data
+
+def data_index(request, device_id=0):
+    excel_data = import_data("D:/23.xlsx")
+    print(excel_data)
 
 
